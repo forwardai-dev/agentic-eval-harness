@@ -1,0 +1,673 @@
+<meta charset="utf-8" />
+<title>Agentic Eval Harness — MCP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --panel-2: #fbfbfd;
+    --border: #e1e4ea;
+    --fg: #14171f;
+    --muted: #5b6172;
+    --accent: #3454d1;
+    --accent-2: #6c3ce9;
+    --pass: #0f8a4b;
+    --pass-bg: #e6f6ec;
+    --fail: #c22b2b;
+    --fail-bg: #fbe9e9;
+    --warn: #a4650a;
+    --warn-bg: #fdf1e0;
+    --info-bg: #eef1fb;
+    --mono-bg: #0f1117;
+    --mono-fg: #d7dbe5;
+    --shadow: 0 1px 2px rgba(20, 23, 31, 0.06), 0 8px 24px rgba(20, 23, 31, 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1016;
+      --panel: #171a23;
+      --panel-2: #1c202b;
+      --border: #2a2f3d;
+      --fg: #e8eaf0;
+      --muted: #9298ab;
+      --accent: #7c96ff;
+      --accent-2: #b393f5;
+      --pass: #35d187;
+      --pass-bg: #113023;
+      --fail: #ff6b6b;
+      --fail-bg: #331616;
+      --warn: #ffbe6b;
+      --warn-bg: #362513;
+      --info-bg: #1c2140;
+      --mono-bg: #0a0b10;
+      --mono-fg: #d7dbe5;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1016; --panel: #171a23; --panel-2: #1c202b; --border: #2a2f3d; --fg: #e8eaf0;
+    --muted: #9298ab; --accent: #7c96ff; --accent-2: #b393f5; --pass: #35d187; --pass-bg: #113023;
+    --fail: #ff6b6b; --fail-bg: #331616; --warn: #ffbe6b; --warn-bg: #362513; --info-bg: #1c2140;
+    --mono-bg: #0a0b10; --mono-fg: #d7dbe5; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f7f9; --panel: #ffffff; --panel-2: #fbfbfd; --border: #e1e4ea; --fg: #14171f;
+    --muted: #5b6172; --accent: #3454d1; --accent-2: #6c3ce9; --pass: #0f8a4b; --pass-bg: #e6f6ec;
+    --fail: #c22b2b; --fail-bg: #fbe9e9; --warn: #a4650a; --warn-bg: #fdf1e0; --info-bg: #eef1fb;
+    --mono-bg: #0f1117; --mono-fg: #d7dbe5; --shadow: 0 1px 2px rgba(20,23,31,.06), 0 8px 24px rgba(20,23,31,.05);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    line-height: 1.45;
+  }
+  a { color: var(--accent); }
+  code, pre, .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+  header.top {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--panel);
+  }
+  header.top h1 { font-size: 18px; margin: 0; }
+  header.top .sub { color: var(--muted); font-size: 12.5px; margin-top: 3px; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    font-size: 11.5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .badge.offline { color: var(--pass); border-color: var(--pass); background: var(--pass-bg); }
+
+  .apibar { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .apibar input {
+    font: inherit; font-size: 12px; padding: 5px 8px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--panel-2); color: var(--fg); width: 210px;
+  }
+  .apibar button.tiny { font-size: 12px; padding: 5px 10px; }
+
+  main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 18px;
+    padding: 18px 24px 60px;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+  @media (max-width: 880px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+  .panel + .panel { margin-top: 16px; }
+  .panel h2 {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+  .panel h3 { font-size: 14px; margin: 0 0 6px; }
+
+  .rail { display: flex; flex-direction: column; gap: 14px; }
+  .task-list { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+  .task-item {
+    text-align: left;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: var(--fg);
+  }
+  .task-item:hover { border-color: var(--accent); }
+  .task-item.selected { border-color: var(--accent); background: var(--info-bg); }
+  .task-item .tid { font-weight: 700; }
+  .task-item .cat { color: var(--muted); display: block; margin-top: 2px; }
+  .task-item .adv-tag {
+    display: inline-block; margin-left: 6px; font-size: 10px; font-weight: 700;
+    color: var(--fail); background: var(--fail-bg); border-radius: 4px; padding: 1px 5px;
+    vertical-align: middle;
+  }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--fg);
+    border-radius: 8px;
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  button:hover { border-color: var(--accent); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.secondary { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+  button.ghost { background: transparent; }
+  button.danger { background: var(--fail); border-color: var(--fail); color: #fff; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .gate-banner {
+    display: flex; align-items: center; gap: 16px; padding: 18px 20px;
+    border-radius: 12px; border: 1px solid var(--border);
+  }
+  .gate-banner.pass { background: var(--pass-bg); border-color: var(--pass); }
+  .gate-banner.fail { background: var(--fail-bg); border-color: var(--fail); }
+  .gate-banner.idle { background: var(--panel-2); color: var(--muted); }
+  .gate-pill {
+    font-size: 22px; font-weight: 800; letter-spacing: 0.03em;
+    padding: 8px 18px; border-radius: 10px; background: rgba(0,0,0,0.06);
+  }
+  .gate-banner.pass .gate-pill { color: var(--pass); }
+  .gate-banner.fail .gate-pill { color: var(--fail); }
+  .gate-body .lead { font-weight: 700; margin: 0 0 4px; }
+  .gate-body ul { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }
+  .gate-body .lbl { font-weight: 700; margin-right: 4px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
+  .tile { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+  .tile .v { font-size: 20px; font-weight: 800; }
+  .tile .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
+
+  .trace-timeline { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .step-card { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--panel-2); }
+  .step-card .agent-tag {
+    display: inline-block; font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.04em; padding: 2px 8px; border-radius: 999px; margin-bottom: 6px;
+    background: var(--info-bg); color: var(--accent);
+  }
+  .step-card .lead { font-weight: 700; margin: 0 0 6px; }
+  .step-card ul { margin: 0; padding-left: 18px; font-size: 12.5px; }
+  .step-card ul li { margin-bottom: 2px; }
+  .step-card .lbl { font-weight: 700; margin-right: 4px; color: var(--muted); }
+
+  .flag {
+    border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 12.5px;
+    border: 1px solid; display: flex; gap: 8px; align-items: flex-start;
+  }
+  .flag.blocking { background: var(--fail-bg); border-color: var(--fail); color: var(--fail); }
+  .flag.warn { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+  .flag.info { background: var(--info-bg); border-color: var(--accent); color: var(--accent); }
+  .flag .flag-icon { font-weight: 800; }
+  .flag .flag-body b { display: block; margin-bottom: 2px; }
+
+  pre.jsonblock {
+    background: var(--mono-bg); color: var(--mono-fg); border-radius: 8px; padding: 12px;
+    font-size: 11.5px; overflow-x: auto; max-height: 340px; overflow-y: auto; margin: 8px 0 0;
+  }
+  .curlline { display: block; background: var(--mono-bg); color: var(--mono-fg); border-radius: 8px;
+    padding: 10px 12px; font-size: 11.5px; overflow-x: auto; margin-top: 8px; white-space: pre; }
+
+  .verify-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .verify-result {
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-top: 10px;
+    font-size: 13px; background: var(--panel-2);
+  }
+  .verify-result.ok { border-color: var(--pass); background: var(--pass-bg); }
+  .verify-result.bad { border-color: var(--fail); background: var(--fail-bg); }
+  .check-line { display: flex; justify-content: space-between; padding: 2px 0; font-size: 12.5px; }
+  .check-line .ok-mark { color: var(--pass); font-weight: 800; }
+  .check-line .bad-mark { color: var(--fail); font-weight: 800; }
+
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .empty-state { color: var(--muted); font-size: 13px; padding: 20px 4px; }
+  .per-task-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 10px; }
+  .per-task-table th, .per-task-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .pf-pass { color: var(--pass); font-weight: 700; }
+  .pf-fail { color: var(--fail); font-weight: 700; }
+  .adv-yes { color: var(--fail); font-weight: 700; }
+  footer.foot { text-align: center; color: var(--muted); font-size: 12px; padding: 20px; }
+</style>
+
+<header class="top">
+  <div>
+    <h1>Agentic Eval Harness — over MCP</h1>
+    <div class="sub">planner → executor → critic · eval + gate · signed evidence · MCP tool server</div>
+    <div class="sub" id="provider-note">model provider: …</div>
+  </div>
+  <div class="badges">
+    <span class="badge offline">Offline · no API keys · deterministic</span>
+    <span class="badge" id="theme-note">theme: auto</span>
+    <div class="apibar">
+      <span>API</span>
+      <input id="api-base" type="text" value="http://127.0.0.1:8000" />
+      <button class="tiny" id="api-check">check</button>
+      <span id="api-status" class="small">·</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="rail">
+    <div class="panel">
+      <h2>Golden task set</h2>
+      <div id="task-list" class="task-list">
+        <div class="empty-state">Loading golden tasks…</div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Run controls</h2>
+      <div class="btn-row">
+        <button class="primary" id="btn-run" disabled>Run selected task</button>
+        <button class="secondary" id="btn-eval">Run eval suite</button>
+      </div>
+      <p class="small muted" style="margin-top:10px">
+        <b>Demo script:</b> run a clean task (e.g. <code>gt-001</code>) → PASS. Then run an
+        adversarial one (e.g. <code>gt-004</code>, prompt-injected) → critic catches it, FAIL.
+        Then <b>Run eval suite</b> for accuracy + adversarial catch-rate over the whole set.
+      </p>
+    </div>
+  </div>
+
+  <div class="col-main">
+    <div class="panel" id="gate-panel">
+      <h2>Governance gate — last run</h2>
+      <div class="gate-banner idle" id="gate-banner">
+        <div class="gate-pill">—</div>
+        <div class="gate-body">
+          <p class="lead">No run yet.</p>
+          <p class="small muted">Pick a golden task on the left and click <b>Run selected task</b>.</p>
+        </div>
+      </div>
+      <div class="tiles" id="run-tiles"></div>
+    </div>
+
+    <div class="panel" id="trace-panel">
+      <h2>Trace timeline</h2>
+      <div id="trace-timeline" class="trace-timeline">
+        <div class="empty-state">The planner → executor → critic trace for the last run will appear here.</div>
+      </div>
+    </div>
+
+    <div class="panel" id="eval-panel">
+      <h2>Eval suite — golden-set results</h2>
+      <div id="eval-body">
+        <div class="empty-state">Click <b>Run eval suite</b> to score the whole golden set: accuracy, latency, tokens, tool-call success, and adversarial catch-rate.</div>
+      </div>
+    </div>
+
+    <div class="panel" id="mcp-panel">
+      <h2>MCP server panel</h2>
+      <p class="small muted">
+        The same workflow is exposed over a minimal JSON-RPC 2.0 <code>/mcp</code> endpoint any
+        MCP client can call — <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.
+      </p>
+      <div class="btn-row">
+        <button id="btn-mcp-list">tools/list</button>
+        <button id="btn-mcp-call" disabled>tools/call for selected task</button>
+      </div>
+      <div id="mcp-body"></div>
+    </div>
+
+    <div class="panel" id="evidence-panel">
+      <h2>Signed evidence — tamper-evident audit record</h2>
+      <p class="small muted">
+        Every run is sealed into a hash-chained, Ed25519-signed record. <b>Verify</b> re-checks it
+        three independent ways (content-hash integrity, signature, gate decision-replay).
+        <b>Tamper &amp; re-verify</b> flips one bit in a copy and proves rejection.
+      </p>
+      <div class="verify-row">
+        <button id="btn-verify" disabled>Verify evidence</button>
+        <button class="danger" id="btn-tamper" disabled>Tamper &amp; re-verify</button>
+      </div>
+      <div id="evidence-body"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="foot">
+  aeh-mcp — built offline, no network calls at runtime · evolution of the Agent Assurance Harness pattern
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var state = {
+    apiBase: localStorage.getItem("aeh_api_base") || "http://127.0.0.1:8000",
+    goldenTasks: [],
+    selectedTaskId: null,
+    lastTrace: null,
+    lastEval: null
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ---- theme note (purely cosmetic; CSS handles the actual theming) -------
+  try {
+    var root = document.documentElement;
+    var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+    var updateThemeNote = function () {
+      var forced = root.getAttribute("data-theme");
+      $("theme-note").textContent = "theme: " + (forced ? forced : (mq && mq.matches ? "dark (auto)" : "light (auto)"));
+    };
+    updateThemeNote();
+    if (mq && mq.addEventListener) mq.addEventListener("change", updateThemeNote);
+  } catch (e) { /* non-fatal */ }
+
+  // ---- API helper -----------------------------------------------------------
+  function apiBase() { return $("api-base").value.replace(/\/$/, ""); }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var url = apiBase() + path;
+    var init = {
+      method: opts.method || "GET",
+      headers: { "Content-Type": "application/json" }
+    };
+    if (opts.body) init.body = JSON.stringify(opts.body);
+    return fetch(url, init).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var err = new Error((data && data.detail) || ("HTTP " + res.status));
+          err.status = res.status;
+          err.data = data;
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function money(n) { return "$" + Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  // ---- init -------------------------------------------------------------
+  $("api-base").value = state.apiBase;
+  $("api-base").addEventListener("change", function () {
+    localStorage.setItem("aeh_api_base", $("api-base").value);
+  });
+  $("api-check").addEventListener("click", checkApi);
+  checkApi();
+  loadGolden();
+
+  function checkApi() {
+    $("api-status").textContent = "checking…";
+    api("/api/health").then(function () {
+      $("api-status").textContent = "● online";
+      $("api-status").style.color = "var(--pass)";
+    }).catch(function () {
+      $("api-status").textContent = "● offline — start the backend (see README)";
+      $("api-status").style.color = "var(--fail)";
+    });
+    api("/api/provider").then(function (p) {
+      $("provider-note").textContent = "model provider: " + p.name + " — " + (p.note || "");
+    }).catch(function () { $("provider-note").textContent = ""; });
+  }
+
+  function loadGolden() {
+    api("/api/golden").then(function (tasks) {
+      state.goldenTasks = tasks;
+      renderTaskList();
+    }).catch(function (err) {
+      $("task-list").innerHTML = '<div class="empty-state">Could not load golden set: ' + esc(err.message) + "</div>";
+    });
+  }
+
+  function renderTaskList() {
+    var el = $("task-list");
+    if (!state.goldenTasks.length) {
+      el.innerHTML = '<div class="empty-state">No golden tasks loaded.</div>';
+      return;
+    }
+    el.innerHTML = "";
+    state.goldenTasks.forEach(function (t) {
+      var btn = document.createElement("button");
+      btn.className = "task-item" + (t.task_id === state.selectedTaskId ? " selected" : "");
+      btn.innerHTML =
+        '<span class="tid">' + esc(t.task_id) + "</span>" +
+        (t.adversarial ? '<span class="adv-tag">ADVERSARIAL</span>' : "") +
+        '<span class="cat">' + esc(t.category) + "</span>";
+      btn.title = t.prompt;
+      btn.addEventListener("click", function () {
+        state.selectedTaskId = t.task_id;
+        renderTaskList();
+        $("btn-run").disabled = false;
+        $("btn-mcp-call").disabled = false;
+      });
+      el.appendChild(btn);
+    });
+  }
+
+  // ---- run a single task --------------------------------------------------
+  $("btn-run").addEventListener("click", function () {
+    if (!state.selectedTaskId) return;
+    setBusy($("btn-run"), true);
+    api("/api/run", { method: "POST", body: { task_id: state.selectedTaskId } })
+      .then(function (trace) {
+        state.lastTrace = trace;
+        renderGate(trace);
+        renderTrace(trace);
+        $("btn-verify").disabled = false;
+        $("btn-tamper").disabled = false;
+        $("evidence-body").innerHTML = "";
+      })
+      .catch(function (err) { alert("Run failed: " + err.message); })
+      .finally(function () { setBusy($("btn-run"), false); });
+  });
+
+  function setBusy(btn, busy) {
+    btn.disabled = busy;
+    btn.dataset.label = btn.dataset.label || btn.textContent;
+    btn.textContent = busy ? "Running…" : btn.dataset.label;
+  }
+
+  function renderGate(trace) {
+    var banner = $("gate-banner");
+    banner.className = "gate-banner " + (trace.gate === "PASS" ? "pass" : "fail");
+    var bullets = [
+      '<li><span class="lbl">Task:</span>' + esc(trace.task_id) + " — " + esc(trace.prompt) + "</li>",
+      '<li><span class="lbl">Answer:</span>' + esc(trace.answer) + "</li>",
+      '<li><span class="lbl">Confidence:</span>' + trace.confidence.toFixed(2) + "</li>",
+      '<li><span class="lbl">Findings:</span>' + (trace.findings.length ? trace.findings.length + " raised" : "none") + "</li>"
+    ].join("");
+    banner.innerHTML =
+      '<div class="gate-pill">' + trace.gate + "</div>" +
+      '<div class="gate-body"><p class="lead">' + esc(trace.gate_reason) + "</p><ul>" + bullets + "</ul></div>";
+
+    var m = trace.metrics;
+    $("run-tiles").innerHTML = [
+      tile(trace.gate === "PASS" ? "100%" : "0%", "accuracy (this run)"),
+      tile(m.latency_ms_total + " ms", "latency (total)"),
+      tile(m.tokens_total, "tokens (total)"),
+      tile((m.tool_success_rate * 100).toFixed(0) + "%", "tool-call success"),
+      tile(trace.confidence.toFixed(2), "critic confidence")
+    ].join("");
+  }
+
+  function tile(v, k) {
+    return '<div class="tile"><div class="v">' + esc(v) + '</div><div class="k">' + esc(k) + "</div></div>";
+  }
+
+  function renderTrace(trace) {
+    var el = $("trace-timeline");
+    el.innerHTML = "";
+    trace.steps.forEach(function (step) {
+      el.appendChild(stepCard(step, trace));
+    });
+  }
+
+  function stepCard(step, trace) {
+    var div = document.createElement("div");
+    div.className = "step-card";
+    var lead = "";
+    var bullets = [];
+    if (step.agent === "planner") {
+      lead = "Decomposed <b>" + esc(step.output.category) + "</b> into " + step.output.plan.length + " step(s).";
+      bullets.push(kv("Plan", step.output.plan.join(" → ")));
+    } else if (step.agent === "executor") {
+      lead = "Executed the plan and produced: <b>" + esc(step.output) + "</b>";
+      if (step.tool_calls.length) {
+        bullets.push(kv("Tool calls", step.tool_calls.map(function (c) {
+          return c.name + "(" + JSON.stringify(c.args) + ") → " + (c.success ? "ok" : "FAILED");
+        }).join("; ")));
+      } else {
+        bullets.push(kv("Tool calls", "none"));
+      }
+    } else if (step.agent === "critic") {
+      lead = "Scored the executor's output against the golden expected value + policy rules.";
+      bullets.push(kv("Confidence", (step.confidence != null ? step.confidence.toFixed(2) : "—")));
+    }
+    bullets.push(kv("Tokens", step.tokens));
+    bullets.push(kv("Latency", step.latency_ms + " ms"));
+
+    var findingsHtml = "";
+    if (step.agent === "critic" && trace.findings.length) {
+      findingsHtml = trace.findings.map(function (f) {
+        return (
+          '<div class="flag ' + f.severity + '">' +
+          '<div class="flag-icon">' + (f.severity === "blocking" ? "STOP" : f.severity === "warn" ? "WARN" : "INFO") + "</div>" +
+          '<div class="flag-body"><b>' + esc(f.rule_id) + " · " + esc(f.severity) + "</b>" + esc(f.message) + "</div>" +
+          "</div>"
+        );
+      }).join("");
+    }
+
+    div.innerHTML =
+      '<span class="agent-tag">' + esc(step.agent) + "</span>" +
+      '<p class="lead">' + lead + "</p>" +
+      "<ul>" + bullets.join("") + "</ul>" +
+      findingsHtml;
+    return div;
+  }
+
+  function kv(label, value) {
+    return '<li><span class="lbl">' + esc(label) + ":</span>" + esc(value) + "</li>";
+  }
+
+  // ---- eval suite ---------------------------------------------------------
+  $("btn-eval").addEventListener("click", function () {
+    setBusy($("btn-eval"), true);
+    api("/api/eval", { method: "POST" })
+      .then(function (result) {
+        state.lastEval = result;
+        renderEval(result);
+      })
+      .catch(function (err) { alert("Eval suite failed: " + err.message); })
+      .finally(function () { setBusy($("btn-eval"), false); });
+  });
+
+  function renderEval(r) {
+    var tiles = [
+      tile((r.accuracy * 100).toFixed(0) + "%", "accuracy vs golden"),
+      tile(r.latency_ms_p95 + " ms", "latency p95"),
+      tile(r.tokens_total, "tokens total"),
+      tile((r.tool_call_success_rate * 100).toFixed(0) + "%", "tool-call success"),
+      tile((r.adversarial_catch_rate * 100).toFixed(0) + "%", "adversarial catch-rate")
+    ].join("");
+
+    var rows = r.per_task.map(function (t) {
+      return (
+        "<tr><td>" + esc(t.task_id) + "</td><td>" + esc(t.category) + "</td>" +
+        "<td>" + (t.adversarial ? '<span class="adv-yes">yes</span>' : "no") + "</td>" +
+        '<td class="' + (t.pass ? "pf-pass" : "pf-fail") + '">' + (t.pass ? "PASS" : "FAIL") + "</td>" +
+        '<td class="' + (t.gate === "PASS" ? "pf-pass" : "pf-fail") + '">' + esc(t.gate) + "</td>" +
+        "<td>" + t.confidence.toFixed(2) + "</td></tr>"
+      );
+    }).join("");
+
+    $("eval-body").innerHTML =
+      '<div class="gate-banner ' + (r.gate === "PASS" ? "pass" : "fail") + '" style="margin-bottom:6px">' +
+      '<div class="gate-pill">' + r.gate + "</div>" +
+      '<div class="gate-body"><p class="lead">' + esc(r.gate_reason) + "</p>" +
+      '<ul><li><span class="lbl">Tasks:</span>' + r.n_tasks + " (" + r.n_adversarial + " adversarial)</li></ul></div>" +
+      "</div>" +
+      '<div class="tiles">' + tiles + "</div>" +
+      '<table class="per-task-table"><thead><tr><th>Task</th><th>Category</th><th>Adversarial</th><th>Accuracy</th><th>Gate</th><th>Confidence</th></tr></thead><tbody>' +
+      rows + "</tbody></table>";
+  }
+
+  // ---- MCP panel ------------------------------------------------------------
+  $("btn-mcp-list").addEventListener("click", function () {
+    var req = { jsonrpc: "2.0", id: 1, method: "tools/list" };
+    api("/mcp", { method: "POST", body: req }).then(function (resp) {
+      renderMcp(req, resp, "/mcp");
+    }).catch(function (err) { alert("MCP call failed: " + err.message); });
+  });
+
+  $("btn-mcp-call").addEventListener("click", function () {
+    if (!state.selectedTaskId) return;
+    var req = {
+      jsonrpc: "2.0", id: 2, method: "tools/call",
+      params: { name: "run_agentic_task", arguments: { task_id: state.selectedTaskId } }
+    };
+    api("/mcp", { method: "POST", body: req }).then(function (resp) {
+      renderMcp(req, resp, "/mcp");
+    }).catch(function (err) { alert("MCP call failed: " + err.message); });
+  });
+
+  function renderMcp(req, resp, path) {
+    var curl = "curl -s " + apiBase() + path + " \\\n  -H 'Content-Type: application/json' \\\n  -d '" + JSON.stringify(req) + "'";
+    $("mcp-body").innerHTML =
+      '<h3 class="small">Request</h3><pre class="jsonblock">' + esc(JSON.stringify(req, null, 2)) + "</pre>" +
+      '<h3 class="small">Response</h3><pre class="jsonblock">' + esc(JSON.stringify(resp, null, 2)) + "</pre>" +
+      '<h3 class="small">Equivalent curl</h3><code class="curlline">' + esc(curl) + "</code>";
+  }
+
+  // ---- evidence panel ---------------------------------------------------
+  $("btn-verify").addEventListener("click", function () { doVerify(false); });
+  $("btn-tamper").addEventListener("click", function () { doVerify(true); });
+
+  function doVerify(tamper) {
+    if (!state.lastTrace) return;
+    api("/api/verify", { method: "POST", body: { run_id: state.lastTrace.run_id, tamper: tamper } })
+      .then(function (r) { renderVerify(r, tamper); })
+      .catch(function (err) { alert("Verify failed: " + err.message); });
+  }
+
+  function renderVerify(r, tampered) {
+    var lines = [
+      ["Content-hash integrity", r.integrity],
+      ["Ed25519 signature", r.signature],
+      ["Gate decision-replay", r.decision],
+      ["Chain linkage", r.chain]
+    ].map(function (pair) {
+      return (
+        '<div class="check-line"><span>' + pair[0] + '</span><span class="' + (pair[1] ? "ok-mark" : "bad-mark") + '">' +
+        (pair[1] ? "✓ ok" : "✗ FAILED") + "</span></div>"
+      );
+    }).join("");
+
+    var ev = state.lastTrace && state.lastTrace.evidence;
+    var head = ev
+      ? '<p class="small muted mono">this_hash: ' + esc(ev.this_hash) + "<br/>signature: " + esc(ev.signature.slice(0, 48)) + "…</p>"
+      : "";
+
+    $("evidence-body").innerHTML =
+      head +
+      '<div class="verify-result ' + (r.verified ? "ok" : "bad") + '">' +
+      "<p class=\"lead\" style=\"font-weight:700;margin:0 0 6px\">" +
+      (r.verified ? "VERIFIED" : "VERIFICATION FAILED") +
+      (tampered ? " (tampered copy — rejection is the expected/correct result)" : "") +
+      "</p>" + lines + "</div>";
+  }
+})();
+</script>
