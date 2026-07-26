@@ -45,7 +45,11 @@ class EvidenceRecord:
         return canonical_bytes(self._presign_dict())
 
     def to_dict(self) -> dict:
-        return {**self._presign_dict(), "signature": self.signature, "this_hash": self.this_hash}
+        return {
+            **self._presign_dict(),
+            "signature": self.signature,
+            "this_hash": self.this_hash,
+        }
 
     @classmethod
     def from_dict(cls, d: dict) -> "EvidenceRecord":
@@ -60,7 +64,9 @@ class EvidenceRecord:
         )
 
 
-def seal(run_id: str, payload: dict, signer: Ed25519Signer, prev_hash: str, timestamp: str) -> EvidenceRecord:
+def seal(
+    run_id: str, payload: dict, signer: Ed25519Signer, prev_hash: str, timestamp: str
+) -> EvidenceRecord:
     """Seal a run's payload into a signed, hash-chained evidence record."""
     rec = EvidenceRecord(
         run_id=run_id,
@@ -91,7 +97,9 @@ class Ledger:
         """The hash of the most recently appended record, or GENESIS if empty."""
         return self._records[self._order[-1]].this_hash if self._order else GENESIS
 
-    def append(self, run_id: str, payload: dict, timestamp: str = "1970-01-01T00:00:00Z") -> EvidenceRecord:
+    def append(
+        self, run_id: str, payload: dict, timestamp: str = "1970-01-01T00:00:00Z"
+    ) -> EvidenceRecord:
         """Seal and append a new record, chained to the current head."""
         rec = seal(run_id, payload, self.signer, self.head(), timestamp)
         self._records[run_id] = rec
@@ -136,12 +144,16 @@ def _replay_decision(payload: dict) -> bool:
     severity or the gate string without the metrics that should back it up."""
     metrics = payload.get("metrics", {})
     accuracy = metrics.get("accuracy", 0.0)
-    blocking = sum(1 for f in payload.get("findings", []) if f.get("severity") == "blocking")
+    blocking = sum(
+        1 for f in payload.get("findings", []) if f.get("severity") == "blocking"
+    )
     status, _ = gate_mod.decide_run(accuracy, blocking)
     return status == payload.get("gate")
 
 
-def verify_record(record: EvidenceRecord, expected_prev_hash: str | None = None) -> dict:
+def verify_record(
+    record: EvidenceRecord, expected_prev_hash: str | None = None
+) -> dict:
     """Verify one record three independent ways: content-hash integrity,
     Ed25519 signature, and gate decision-replay. Optionally also checks it
     links to `expected_prev_hash` in the chain."""
@@ -149,7 +161,9 @@ def verify_record(record: EvidenceRecord, expected_prev_hash: str | None = None)
     integrity = record.this_hash == "sha256:" + sha256_hex(b)
     signature_ok = Ed25519Verifier().verify(b, record.signature, record.public_key_hex)
     decision_ok = _replay_decision(record.payload)
-    chain_ok = True if expected_prev_hash is None else (record.prev_hash == expected_prev_hash)
+    chain_ok = (
+        True if expected_prev_hash is None else (record.prev_hash == expected_prev_hash)
+    )
     return {
         "integrity": integrity,
         "signature": signature_ok,
@@ -166,7 +180,11 @@ def tamper(record: EvidenceRecord) -> EvidenceRecord:
     mutated = copy.deepcopy(record)
     findings = mutated.payload.get("findings", [])
     if findings:
-        findings[0]["severity"] = "info" if findings[0]["severity"] == "blocking" else "blocking"
+        findings[0]["severity"] = (
+            "info" if findings[0]["severity"] == "blocking" else "blocking"
+        )
     else:
-        mutated.payload["gate"] = "PASS" if mutated.payload.get("gate") == "FAIL" else "FAIL"
+        mutated.payload["gate"] = (
+            "PASS" if mutated.payload.get("gate") == "FAIL" else "FAIL"
+        )
     return mutated

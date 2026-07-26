@@ -48,12 +48,12 @@ class AppState:
 
     def _persist(self, trace: Trace) -> None:
         try:
-            runs_dir = self.out_dir / "runs"  # type: ignore[union-attr]
+            runs_dir = self.out_dir / "runs"  # type: ignore[operator]
             runs_dir.mkdir(parents=True, exist_ok=True)
             (runs_dir / f"{trace.run_id}.json").write_text(
                 json.dumps(trace.to_dict(), indent=2), encoding="utf-8"
             )
-            ledger_path = self.out_dir / "ledger.json"  # type: ignore[union-attr]
+            ledger_path = self.out_dir / "ledger.json"  # type: ignore[operator]
             ledger_path.write_text(
                 json.dumps([r.to_dict() for r in self.ledger.list_records()], indent=2),
                 encoding="utf-8",

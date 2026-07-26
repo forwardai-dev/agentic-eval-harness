@@ -14,7 +14,12 @@ def test_planner_decomposition_is_deterministic_and_category_specific():
     r2 = planner.plan(task)
     assert r1.output == r2.output
     assert r1.output["category"] == "invoice_reconciliation"
-    assert r1.output["plan"] == ["extract_ids", "lookup_invoice", "lookup_po", "compare_amounts"]
+    assert r1.output["plan"] == [
+        "extract_ids",
+        "lookup_invoice",
+        "lookup_po",
+        "compare_amounts",
+    ]
 
 
 def test_planner_plan_differs_by_category():

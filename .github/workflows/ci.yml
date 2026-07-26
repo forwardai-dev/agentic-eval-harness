@@ -1,0 +1,17 @@
+name: ci
+on: { push: { branches: [main] }, pull_request: {} }
+jobs:
+  ci:
+    uses: forwardai-dev/ci-workflows/.github/workflows/full.yml@v1.1.3
+    with:
+      install-command: 'pip install -r app/backend/requirements.txt'
+      test-command: 'PYTHONPATH=app/backend python -m pytest app/backend/tests -q'
+      src-paths: 'app/backend/aeh'
+      lint-paths: 'app/backend/aeh app/backend/tests'
+      pyproject-path: 'app/backend/pyproject.toml'
+      pylint-min: 0
+      docstring-min: 0
+      coverage-min: 0
+      run-pyright: false
+      run-semgrep: false
+      run-osv-hard: false

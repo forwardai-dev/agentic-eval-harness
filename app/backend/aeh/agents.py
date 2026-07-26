@@ -55,8 +55,18 @@ class AgentResult:
 
 
 PLANS: dict[str, list[str]] = {
-    "invoice_reconciliation": ["extract_ids", "lookup_invoice", "lookup_po", "compare_amounts"],
-    "refund_approval": ["extract_order_id", "lookup_refund_order", "lookup_policy", "evaluate_refund"],
+    "invoice_reconciliation": [
+        "extract_ids",
+        "lookup_invoice",
+        "lookup_po",
+        "compare_amounts",
+    ],
+    "refund_approval": [
+        "extract_order_id",
+        "lookup_refund_order",
+        "lookup_policy",
+        "evaluate_refund",
+    ],
     "policy_lookup": ["extract_policy_key", "lookup_policy"],
     "request_classification": ["extract_request_text", "classify_request"],
 }
@@ -114,7 +124,9 @@ class ExecutorAgent:
                 tokens=_tokens_for(str(args) + str(exc)),
             )
 
-    def _extraction_failure(self, task: GoldenTask, step_name: str, reason: str, answer: str) -> AgentResult:
+    def _extraction_failure(
+        self, task: GoldenTask, step_name: str, reason: str, answer: str
+    ) -> AgentResult:
         """A required field couldn't be extracted from the prompt — recorded as a
         failed synthetic tool call so the critic's VAL-001 check (which looks at
         tool-call success, not string-matching the answer) catches it uniformly."""
@@ -146,16 +158,22 @@ class ExecutorAgent:
         po_call = self._call(task, "lookup_po", {"po_id": po_id})
         calls.append(po_call)
         if not inv_call.success or not po_call.success:
-            answer = "REJECTED: malformed request — could not resolve invoice or PO record."
+            answer = (
+                "REJECTED: malformed request — could not resolve invoice or PO record."
+            )
         else:
             inv_amt = inv_call.result["amount"]
             po_amt = po_call.result["amount"]
             cmp_call = self._call(
-                task, "compare_amounts", {"invoice_amount": inv_amt, "po_amount": po_amt}
+                task,
+                "compare_amounts",
+                {"invoice_amount": inv_amt, "po_amount": po_amt},
             )
             calls.append(cmp_call)
             if cmp_call.result["match"]:
-                answer = f"MATCH: invoice {invoice_id} matches PO {po_id} (${po_amt:,.2f})."
+                answer = (
+                    f"MATCH: invoice {invoice_id} matches PO {po_id} (${po_amt:,.2f})."
+                )
             else:
                 answer = (
                     f"MISMATCH: invoice {invoice_id} (${inv_amt:,.2f}) does not match "
@@ -176,7 +194,9 @@ class ExecutorAgent:
         order_id = ord_m.group(0)
         order_call = self._call(task, "lookup_refund_order", {"order_id": order_id})
         calls.append(order_call)
-        policy_call = self._call(task, "lookup_policy", {"policy_key": "refund_auto_approve_limit_tier2"})
+        policy_call = self._call(
+            task, "lookup_policy", {"policy_key": "refund_auto_approve_limit_tier2"}
+        )
         calls.append(policy_call)
         if not order_call.success:
             answer = "REJECTED: malformed request — unknown order id."
@@ -213,7 +233,11 @@ class ExecutorAgent:
         calls: list[ToolCall] = []
         call = self._call(task, "lookup_policy", {"policy_key": key})
         calls.append(call)
-        answer = call.result["description"] if call.success else "REJECTED: unknown policy key."
+        answer = (
+            call.result["description"]
+            if call.success
+            else "REJECTED: unknown policy key."
+        )
         return self._finish(task, answer, calls)
 
     def _run_request_classification(self, task: GoldenTask) -> AgentResult:
@@ -225,11 +249,19 @@ class ExecutorAgent:
         if call.success:
             answer = f"category={call.result['category']}; priority={call.result['priority']}"
         else:
-            answer = "REJECTED: malformed request — missing request text; cannot classify."
+            answer = (
+                "REJECTED: malformed request — missing request text; cannot classify."
+            )
         return self._finish(task, answer, calls)
 
-    def _finish(self, task: GoldenTask, answer: str, calls: list[ToolCall]) -> AgentResult:
-        tok = _tokens_for(task.prompt) + _tokens_for(answer) + sum(c.tokens for c in calls)
+    def _finish(
+        self, task: GoldenTask, answer: str, calls: list[ToolCall]
+    ) -> AgentResult:
+        tok = (
+            _tokens_for(task.prompt)
+            + _tokens_for(answer)
+            + sum(c.tokens for c in calls)
+        )
         lat = _det_latency(task.task_id + "|executor", base=50, spread=30) + sum(
             c.latency_ms for c in calls
         )
@@ -273,7 +305,9 @@ class CriticAgent:
                 )
             )
 
-        if executor.output != task.expected and not any(f.severity == "blocking" for f in findings):
+        if executor.output != task.expected and not any(
+            f.severity == "blocking" for f in findings
+        ):
             findings.append(
                 Finding(
                     rule_id="ACC-001",
@@ -290,5 +324,9 @@ class CriticAgent:
         tok = _tokens_for(str(executor.output)) + _tokens_for(str(findings))
         lat = _det_latency(task.task_id + "|critic", base=25, spread=15)
         return AgentResult(
-            output=executor.output, tokens=tok, latency_ms=lat, confidence=confidence, findings=findings
+            output=executor.output,
+            tokens=tok,
+            latency_ms=lat,
+            confidence=confidence,
+            findings=findings,
         )

@@ -37,7 +37,11 @@ def test_gemini_adapter_builds_the_real_vertex_contract():
     assert req["systemInstruction"]["parts"][0]["text"] == "You are a planner."
     assert req["generationConfig"]["temperature"] == 0.0
     ep = g.endpoint()
-    assert "acme-proj" in ep and "gemini-2.5-pro:generateContent" in ep and ep.startswith("https://")
+    assert (
+        "acme-proj" in ep
+        and "gemini-2.5-pro:generateContent" in ep
+        and ep.startswith("https://")
+    )
 
 
 def test_gemini_adapter_is_offline_by_design():

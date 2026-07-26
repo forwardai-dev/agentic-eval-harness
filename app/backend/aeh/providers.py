@@ -57,7 +57,10 @@ class GeminiVertexProvider:
     name = "vertex:gemini-2.5-pro"
 
     def __init__(
-        self, project: str | None = None, location: str = "us-central1", model: str = "gemini-2.5-pro"
+        self,
+        project: str | None = None,
+        location: str = "us-central1",
+        model: str = "gemini-2.5-pro",
     ) -> None:
         self.project = project or os.environ.get("GOOGLE_CLOUD_PROJECT")
         self.location = location
@@ -105,8 +108,8 @@ class GeminiVertexProvider:
 
 def select_provider(env: dict | None = None) -> Provider:
     """Pick a provider from AEH_PROVIDER (default 'mock'). 'gemini'/'vertex' -> Gemini adapter."""
-    env = env if env is not None else os.environ
-    choice = (env.get("AEH_PROVIDER") or "mock").strip().lower()
+    source = env if env is not None else os.environ
+    choice = (source.get("AEH_PROVIDER") or "mock").strip().lower()
     if choice in ("gemini", "vertex", "vertex-gemini"):
         return GeminiVertexProvider()
     return MockDeterministicProvider()

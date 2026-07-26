@@ -7,7 +7,9 @@ from aeh.workflow import Orchestrator
 
 
 def test_initialize_returns_protocol_and_server_info():
-    resp = mcp.handle_request({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
+    resp = mcp.handle_request(
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}
+    )
     assert resp["id"] == 1
     assert "error" not in resp
     assert resp["result"]["serverInfo"]["name"] == "aeh-mcp"
@@ -71,7 +73,10 @@ def test_tools_call_unknown_task_id_returns_json_rpc_error():
         "jsonrpc": "2.0",
         "id": 6,
         "method": "tools/call",
-        "params": {"name": "run_agentic_task", "arguments": {"task_id": "gt-does-not-exist"}},
+        "params": {
+            "name": "run_agentic_task",
+            "arguments": {"task_id": "gt-does-not-exist"},
+        },
     }
     resp = mcp.handle_request(body)
     assert "error" in resp
@@ -79,7 +84,9 @@ def test_tools_call_unknown_task_id_returns_json_rpc_error():
 
 
 def test_unknown_method_returns_json_rpc_error():
-    resp = mcp.handle_request({"jsonrpc": "2.0", "id": 7, "method": "not_a_real_method"})
+    resp = mcp.handle_request(
+        {"jsonrpc": "2.0", "id": 7, "method": "not_a_real_method"}
+    )
     assert resp["error"]["code"] == -32601
 
 
@@ -90,7 +97,12 @@ def test_malformed_body_not_a_dict_returns_json_rpc_error():
 
 
 def test_tools_call_missing_name_returns_error():
-    body = {"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"arguments": {}}}
+    body = {
+        "jsonrpc": "2.0",
+        "id": 8,
+        "method": "tools/call",
+        "params": {"arguments": {}},
+    }
     resp = mcp.handle_request(body)
     assert "error" in resp
 

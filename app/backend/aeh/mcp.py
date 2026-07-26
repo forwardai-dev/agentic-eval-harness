@@ -24,8 +24,14 @@ TOOL_DEF: dict[str, Any] = {
     "inputSchema": {
         "type": "object",
         "properties": {
-            "task_id": {"type": "string", "description": "A golden-set task id, e.g. gt-001"},
-            "prompt": {"type": "string", "description": "Free-text prompt (with category, if task_id omitted)"},
+            "task_id": {
+                "type": "string",
+                "description": "A golden-set task id, e.g. gt-001",
+            },
+            "prompt": {
+                "type": "string",
+                "description": "Free-text prompt (with category, if task_id omitted)",
+            },
             "category": {
                 "type": "string",
                 "description": (
@@ -57,8 +63,15 @@ def _resolve_task(args: dict) -> GoldenTask:
         return task
     prompt, category = args.get("prompt"), args.get("category")
     if not prompt or not category:
-        raise MCPError(-32602, "invalid params: provide task_id, or both prompt and category")
-    return GoldenTask(task_id="adhoc", prompt=prompt, category=category, expected=args.get("expected", ""))
+        raise MCPError(
+            -32602, "invalid params: provide task_id, or both prompt and category"
+        )
+    return GoldenTask(
+        task_id="adhoc",
+        prompt=prompt,
+        category=category,
+        expected=args.get("expected", ""),
+    )
 
 
 def handle_request(
@@ -75,7 +88,10 @@ def handle_request(
         return {
             "jsonrpc": "2.0",
             "id": None,
-            "error": {"code": -32600, "message": "invalid request: expected a JSON object"},
+            "error": {
+                "code": -32600,
+                "message": "invalid request: expected a JSON object",
+            },
         }
 
     req_id = body.get("id")
@@ -109,8 +125,16 @@ def handle_request(
         else:
             raise MCPError(-32601, f"method not found: {method}")
     except MCPError as exc:
-        return {"jsonrpc": "2.0", "id": req_id, "error": {"code": exc.code, "message": exc.message}}
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "error": {"code": exc.code, "message": exc.message},
+        }
     except Exception as exc:  # never leak a raw traceback to a client
-        return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32603, "message": f"internal error: {exc}"}}
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "error": {"code": -32603, "message": f"internal error: {exc}"},
+        }
 
     return {"jsonrpc": "2.0", "id": req_id, "result": result}

@@ -36,9 +36,13 @@ def summarize(traces: list[tuple[GoldenTask, Trace]]) -> dict:
     latencies = [tr.metrics["latency_ms_total"] for _, tr in traces]
     tokens = [tr.metrics["tokens_total"] for _, tr in traces]
 
-    all_tool_calls = [c for _, tr in traces for step in tr.steps for c in step.tool_calls]
+    all_tool_calls = [
+        c for _, tr in traces for step in tr.steps for c in step.tool_calls
+    ]
     tool_success_rate = (
-        sum(1 for c in all_tool_calls if c.success) / len(all_tool_calls) if all_tool_calls else 1.0
+        sum(1 for c in all_tool_calls if c.success) / len(all_tool_calls)
+        if all_tool_calls
+        else 1.0
     )
 
     clean = [(t, tr) for t, tr in traces if not t.adversarial]
@@ -49,9 +53,13 @@ def summarize(traces: list[tuple[GoldenTask, Trace]]) -> dict:
     adversarial_caught = sum(
         1 for _, tr in adversarial if any(f.severity == "blocking" for f in tr.findings)
     )
-    adversarial_catch_rate = (adversarial_caught / len(adversarial)) if adversarial else 1.0
+    adversarial_catch_rate = (
+        (adversarial_caught / len(adversarial)) if adversarial else 1.0
+    )
 
-    gate_status, gate_reason = gate.decide_suite(accuracy, blocking_on_clean, adversarial_catch_rate)
+    gate_status, gate_reason = gate.decide_suite(
+        accuracy, blocking_on_clean, adversarial_catch_rate
+    )
 
     per_task = [
         {
