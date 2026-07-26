@@ -43,5 +43,7 @@ def test_eval_suite_gate_passes_when_all_predicates_hold():
 def test_eval_suite_latency_and_token_rollups_are_positive():
     result = run_eval_suite()
     assert result["latency_ms_mean"] > 0
-    assert result["latency_ms_p95"] >= result["latency_ms_mean"] * 0  # sanity: non-negative
+    assert (
+        result["latency_ms_p95"] >= result["latency_ms_mean"] * 0
+    )  # sanity: non-negative
     assert result["tokens_total"] > 0

@@ -57,7 +57,10 @@ class GeminiVertexProvider:
     name = "vertex:gemini-2.5-pro"
 
     def __init__(
-        self, project: str | None = None, location: str = "us-central1", model: str = "gemini-2.5-pro"
+        self,
+        project: str | None = None,
+        location: str = "us-central1",
+        model: str = "gemini-2.5-pro",
     ) -> None:
         self.project = project or os.environ.get("GOOGLE_CLOUD_PROJECT")
         self.location = location

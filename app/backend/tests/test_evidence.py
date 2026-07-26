@@ -47,14 +47,22 @@ def test_tamper_breaks_integrity_signature_and_decision_replay():
     _, rec, _ = _sealed_record("gt-004")  # has a blocking finding to flip
     mutated = evidence.tamper(rec)
     result = evidence.verify_record(mutated)
-    assert result["integrity"] is False, "content hash must no longer match stale this_hash"
-    assert result["signature"] is False, "signature was computed over the pre-tamper bytes"
-    assert result["decision"] is False, "recomputed gate must no longer match the claimed gate"
+    assert result["integrity"] is False, (
+        "content hash must no longer match stale this_hash"
+    )
+    assert result["signature"] is False, (
+        "signature was computed over the pre-tamper bytes"
+    )
+    assert result["decision"] is False, (
+        "recomputed gate must no longer match the claimed gate"
+    )
     assert result["verified"] is False
 
 
 def test_tamper_on_a_clean_run_also_breaks_all_three_checks():
-    _, rec, _ = _sealed_record("gt-001")  # no findings -> tamper() flips the gate field instead
+    _, rec, _ = _sealed_record(
+        "gt-001"
+    )  # no findings -> tamper() flips the gate field instead
     mutated = evidence.tamper(rec)
     result = evidence.verify_record(mutated)
     assert result["integrity"] is False

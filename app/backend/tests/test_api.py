@@ -42,7 +42,10 @@ def test_post_run_missing_task_id_and_prompt_is_400(client):
 def test_post_run_adhoc_prompt_and_category(client):
     r = client.post(
         "/api/run",
-        json={"prompt": "What is the PTO carryover policy for FY2026?", "category": "policy_lookup"},
+        json={
+            "prompt": "What is the PTO carryover policy for FY2026?",
+            "category": "policy_lookup",
+        },
     )
     assert r.status_code == 200
     assert "PTO" in r.json()["answer"]

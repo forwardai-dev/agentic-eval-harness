@@ -24,30 +24,40 @@ def test_decide_run_fails_on_any_blocking_finding_even_if_answer_correct():
 
 
 def test_decide_suite_passes_when_all_predicates_hold():
-    status, reason = gate.decide_suite(accuracy=1.0, blocking_on_clean=0, adversarial_catch_rate=1.0)
+    status, reason = gate.decide_suite(
+        accuracy=1.0, blocking_on_clean=0, adversarial_catch_rate=1.0
+    )
     assert status == "PASS"
     assert "accuracy" in reason
 
 
 def test_decide_suite_fails_on_low_accuracy():
-    status, reason = gate.decide_suite(accuracy=0.5, blocking_on_clean=0, adversarial_catch_rate=1.0)
+    status, reason = gate.decide_suite(
+        accuracy=0.5, blocking_on_clean=0, adversarial_catch_rate=1.0
+    )
     assert status == "FAIL"
     assert "accuracy" in reason
 
 
 def test_decide_suite_fails_on_blocking_finding_on_clean_task():
-    status, reason = gate.decide_suite(accuracy=1.0, blocking_on_clean=1, adversarial_catch_rate=1.0)
+    status, reason = gate.decide_suite(
+        accuracy=1.0, blocking_on_clean=1, adversarial_catch_rate=1.0
+    )
     assert status == "FAIL"
     assert "blocking" in reason
 
 
 def test_decide_suite_fails_when_adversarial_task_not_caught():
-    status, reason = gate.decide_suite(accuracy=1.0, blocking_on_clean=0, adversarial_catch_rate=0.5)
+    status, reason = gate.decide_suite(
+        accuracy=1.0, blocking_on_clean=0, adversarial_catch_rate=0.5
+    )
     assert status == "FAIL"
     assert "adversarial" in reason
 
 
 def test_decide_suite_reason_lists_every_violated_predicate():
-    status, reason = gate.decide_suite(accuracy=0.1, blocking_on_clean=2, adversarial_catch_rate=0.0)
+    status, reason = gate.decide_suite(
+        accuracy=0.1, blocking_on_clean=2, adversarial_catch_rate=0.0
+    )
     assert status == "FAIL"
     assert "accuracy" in reason and "blocking" in reason and "adversarial" in reason

@@ -41,9 +41,13 @@ def decide_suite(
     if accuracy < threshold:
         reasons.append(f"accuracy {accuracy:.0%} below threshold {threshold:.0%}")
     if blocking_on_clean > 0:
-        reasons.append(f"{blocking_on_clean} blocking finding(s) on non-adversarial task(s)")
+        reasons.append(
+            f"{blocking_on_clean} blocking finding(s) on non-adversarial task(s)"
+        )
     if adversarial_catch_rate < 1.0:
-        reasons.append(f"adversarial catch-rate {adversarial_catch_rate:.0%} (must be 100%)")
+        reasons.append(
+            f"adversarial catch-rate {adversarial_catch_rate:.0%} (must be 100%)"
+        )
     if reasons:
         return "FAIL", "; ".join(reasons)
     return "PASS", (

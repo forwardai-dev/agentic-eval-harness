@@ -42,7 +42,11 @@ class Orchestrator:
         plan_result = self.planner.plan(task)
         plan_step = TraceStep(
             agent="planner",
-            input={"task_id": task.task_id, "prompt": task.prompt, "category": task.category},
+            input={
+                "task_id": task.task_id,
+                "prompt": task.prompt,
+                "category": task.category,
+            },
             output=plan_result.output,
             tool_calls=[],
             tokens=plan_result.tokens,
@@ -77,7 +81,9 @@ class Orchestrator:
         tokens_total = sum(s.tokens for s in steps)
         tool_calls = exec_step.tool_calls
         tool_success_rate = (
-            sum(1 for c in tool_calls if c.success) / len(tool_calls) if tool_calls else 1.0
+            sum(1 for c in tool_calls if c.success) / len(tool_calls)
+            if tool_calls
+            else 1.0
         )
 
         accuracy = 1.0 if critic_result.output == task.expected else 0.0

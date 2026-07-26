@@ -17,7 +17,11 @@ from .golden import golden_by_id, load_golden
 from .models import GoldenTask
 from .state import AppState, default_out_dir
 
-app = FastAPI(title="aeh-mcp", version="0.1.0", description="Agentic Eval Harness over MCP — offline demo API.")
+app = FastAPI(
+    title="aeh-mcp",
+    version="0.1.0",
+    description="Agentic Eval Harness over MCP — offline demo API.",
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -105,7 +109,9 @@ def _resolve_run_request(body: RunRequest) -> GoldenTask:
     if body.task_id:
         task = golden_by_id(body.task_id)
         if task is None:
-            raise HTTPException(status_code=404, detail=f"unknown task_id: {body.task_id}")
+            raise HTTPException(
+                status_code=404, detail=f"unknown task_id: {body.task_id}"
+            )
         return task
     if body.prompt and body.category:
         return GoldenTask(
@@ -114,7 +120,9 @@ def _resolve_run_request(body: RunRequest) -> GoldenTask:
             category=body.category,
             expected=body.expected or "",
         )
-    raise HTTPException(status_code=400, detail="provide task_id, or both prompt and category")
+    raise HTTPException(
+        status_code=400, detail="provide task_id, or both prompt and category"
+    )
 
 
 @app.get("/api/runs")
@@ -170,4 +178,6 @@ async def mcp_endpoint(body: dict) -> dict:
     ledger as `/api/run` — the run shows up in `/api/runs` and is verifiable
     exactly like one triggered from the dashboard.
     """
-    return mcp.handle_request(body, orchestrator=state.orchestrator, on_trace=state.record_run)
+    return mcp.handle_request(
+        body, orchestrator=state.orchestrator, on_trace=state.record_run
+    )

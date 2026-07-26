@@ -12,9 +12,21 @@ from typing import Any
 # --- synthetic fixture tables (IP-clean, invented data only) ---------------
 
 PO_TABLE: dict[str, dict] = {
-    "PO-778": {"amount": 4250.00, "vendor": "Meridian Office Supply", "item": "Office furniture batch 12"},
-    "PO-780": {"amount": 5800.00, "vendor": "Atlas Industrial Parts", "item": "Conveyor belt assembly"},
-    "PO-900": {"amount": 12300.00, "vendor": "Cascade Logistics", "item": "Warehouse racking system"},
+    "PO-778": {
+        "amount": 4250.00,
+        "vendor": "Meridian Office Supply",
+        "item": "Office furniture batch 12",
+    },
+    "PO-780": {
+        "amount": 5800.00,
+        "vendor": "Atlas Industrial Parts",
+        "item": "Conveyor belt assembly",
+    },
+    "PO-900": {
+        "amount": 12300.00,
+        "vendor": "Cascade Logistics",
+        "item": "Warehouse racking system",
+    },
 }
 
 INVOICE_TABLE: dict[str, dict] = {
@@ -66,7 +78,12 @@ def lookup_invoice(invoice_id: str) -> dict[str, Any]:
 def compare_amounts(invoice_amount: float, po_amount: float) -> dict[str, Any]:
     """Compare an invoice amount to a PO amount."""
     diff = round(invoice_amount - po_amount, 2)
-    return {"invoice_amount": invoice_amount, "po_amount": po_amount, "diff": diff, "match": diff == 0.0}
+    return {
+        "invoice_amount": invoice_amount,
+        "po_amount": po_amount,
+        "diff": diff,
+        "match": diff == 0.0,
+    }
 
 
 def lookup_policy(policy_key: str) -> dict[str, Any]:

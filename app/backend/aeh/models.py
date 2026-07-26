@@ -63,7 +63,11 @@ class Finding:
     message: str
 
     def to_dict(self) -> dict:
-        return {"rule_id": self.rule_id, "severity": self.severity, "message": self.message}
+        return {
+            "rule_id": self.rule_id,
+            "severity": self.severity,
+            "message": self.message,
+        }
 
 
 @dataclass
