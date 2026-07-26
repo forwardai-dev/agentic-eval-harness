@@ -2,7 +2,7 @@ name: ci
 on: { push: { branches: [main] }, pull_request: {} }
 jobs:
   ci:
-    uses: forwardai-dev/ci-workflows/.github/workflows/full.yml@v1.1
+    uses: forwardai-dev/ci-workflows/.github/workflows/full.yml@v1.1.1
     with:
       install-command: 'pip install -r app/backend/requirements.txt'
       test-command: 'PYTHONPATH=app/backend python -m pytest app/backend/tests -q'
