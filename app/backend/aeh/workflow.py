@@ -73,7 +73,7 @@ class Orchestrator:
             tool_calls=[],
             tokens=critic_result.tokens,
             latency_ms=critic_result.latency_ms,
-            confidence=critic_result.confidence,
+            confidence=critic_result.confidence or 0.0,
         )
 
         steps = [plan_step, exec_step, critic_step]
@@ -104,7 +104,7 @@ class Orchestrator:
             prompt=task.prompt,
             steps=steps,
             answer=critic_result.output,
-            confidence=critic_result.confidence,
+            confidence=critic_result.confidence or 0.0,
             findings=critic_result.findings,
             metrics=metrics,
             gate=gate_status,

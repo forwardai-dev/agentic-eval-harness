@@ -108,8 +108,8 @@ class GeminiVertexProvider:
 
 def select_provider(env: dict | None = None) -> Provider:
     """Pick a provider from AEH_PROVIDER (default 'mock'). 'gemini'/'vertex' -> Gemini adapter."""
-    env = env if env is not None else os.environ
-    choice = (env.get("AEH_PROVIDER") or "mock").strip().lower()
+    source = env if env is not None else os.environ
+    choice = (source.get("AEH_PROVIDER") or "mock").strip().lower()
     if choice in ("gemini", "vertex", "vertex-gemini"):
         return GeminiVertexProvider()
     return MockDeterministicProvider()
